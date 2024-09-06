@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Input Details</title>
+    <style>
+        .form-container {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        /* Dropdown styling */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content div {
+            padding: 12px 16px;
+            cursor: pointer;
+        }
+        .dropdown-content div:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropbtn {
+            background-color: #3e8e41;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Enter Details</h2>
+        <form id="detailsForm">
+            <label for="name">Flight No.:</label>
+            <input type="text" id="name" required><br>
+           
+            <div class="dropdown">
+                <label for="pipelineName">Pipeline Name:</label>
+                <input type="text" id="pipelineName" required readonly>
+                <div class="dropdown-content" id="pipelineNamesDropdown"></div>
+            </div><br>
+           
+            <label for="date">Date:</label>
+            <input type="date" id="date" required><br>
+            <label for="empId">Employee ID:</label>
+            <input type="text" id="empId" required><br>
+            <label for="additionalInfo">Additional Info:</label>
+            <textarea id="additionalInfo"></textarea><br>
+            <input type="button" value="View on Map" onclick="submitForm()">
+        </form>
+    </div>
+ 
+    <script>
+        // Define pipeline names
+        var pipelines = [
+            "STF-FTNGB 1-2.7Km",
+            "STF-FTNGB 2-2.8Km",
+            "STF-FTNGB 3-1.2Km",
+            "STF-FTNGB 4-2.6Km",
+            "STF-FTNGB 5-2.8Km"
+        ];
+ 
+        // Function to populate the dropdown with pipeline names
+        function populateDropdown() {
+            var dropdown = document.getElementById('pipelineNamesDropdown');
+            pipelines.forEach(function(name) {
+                var div = document.createElement('div');
+                div.textContent = name;
+                div.onclick = function() {
+                    document.getElementById('pipelineName').value = name;
+                    dropdown.style.display = 'none';
+                };
+                dropdown.appendChild(div);
+            });
+        }
+ 
+        // Call the function to populate dropdown on page load
+        populateDropdown();
+ 
+        function submitForm() {
+            var name = encodeURIComponent(document.getElementById('name').value);
+            var pipelineName = encodeURIComponent(document.getElementById('pipelineName').value);
+            var date = encodeURIComponent(document.getElementById('date').value);
+            var empId = encodeURIComponent(document.getElementById('empId').value);
+            var additionalInfo = encodeURIComponent(document.getElementById('additionalInfo').value);
+ 
+            var url = `map.html?name=${name}&pipelineName=${pipelineName}&date=${date}&empId=${empId}&additionalInfo=${additionalInfo}`;
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>
