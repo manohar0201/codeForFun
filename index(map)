@@ -1,139 +1,157 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Map View</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <title>Input Details</title>
     <style>
-        #map { height: 600px; }
-        .popup-content {
+        body {
+            background-color: #e0f7fa; /* Light blue background */
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .form-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 {
+            color: #00796b;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #00796b;
+        }
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        .dropdown-content div {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .dropdown-content div:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        input[type="button"] {
+            background-color: #00796b;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="button"]:hover {
+            background-color: #004d40;
+        }
+        .map-preview {
+            margin: 20px 0;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .map-preview img {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <div class="form-container">
+        <h2>Enter Details</h2>
+        <form id="detailsForm">
+            <label for="name">Flight No.:</label>
+            <input type="text" id="name" required><br>
+           
+            <div class="dropdown">
+                <label for="pipelineName">Pipeline Name:</label>
+                <input type="text" id="pipelineName" required readonly>
+                <div class="dropdown-content" id="pipelineNamesDropdown"></div>
+            </div><br>
+           
+            <label for="date">Date:</label>
+            <input type="date" id="date" required><br>
+            
+            <label for="empId">Employee ID:</label>
+            <input type="text" id="empId" required><br>
+            
+            <input type="button" value="View on Map" onclick="submitForm()">
+        </form>
+
+        
+        <!-- <div class="map-preview">
+            <h3>Map Preview</h3>
+            <img src="https://via.placeholder.com/600x400?text=Map+Preview" alt="Map Preview">
+        </div> -->
+    </div>
+ 
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([27.38330765905595, 95.32926315128131], 12);
+        // Define pipeline names
+        var pipelines = [
+            "STF-FTNGB 1-2.7Km",
+            "STF-FTNGB 2-2.8Km",
+            "STF-FTNGB 3-1.2Km",
+            "STF-FTNGB 4-2.6Km",
+            "STF-FTNGB 5-2.8Km"
+        ];
  
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
- 
-        // Retrieve URL parameters
-        var urlParams = new URLSearchParams(window.location.search);
-        var name = decodeURIComponent(urlParams.get('name')) || 'No name provided';
-        var pipelineName = decodeURIComponent(urlParams.get('pipelineName')) || 'No pipeline name';
-        var date = decodeURIComponent(urlParams.get('date')) || 'No date provided';
-        var empId = decodeURIComponent(urlParams.get('empId')) || 'No employee ID';
-        var additionalInfo = decodeURIComponent(urlParams.get('additionalInfo')) || 'No additional info';
- 
-        // Define pipelines and their coordinates
-        var pipelines = {
-            "STF-FTNGB 1-2.7Km": [
-                [95.32926315128131, 27.38330765905595],
-                [95.32566516639608, 27.3848005900544],
-                [95.3246290316968, 27.38509551740051],
-                [95.32316277232395, 27.38579714610832],
-                [95.32178646666964, 27.38669952183201],
-                [95.32019677495393, 27.38695575507839],
-                [95.31865483876643, 27.38772385988891],
-                [95.3180299931942, 27.38766059925725],
-                [95.31743281724314, 27.38774130976136],
-                [95.31688307632595, 27.3879905743256],
-                [95.31574405779867, 27.38826787449942],
-                [95.31403071403875, 27.38703357990862],
-                [95.31208272536003, 27.38418055167435],
-                [95.3109238263755, 27.38339312102666],
-                [95.30979125505428, 27.38304225448465],
-                [95.30880792784434, 27.38284730376458],
-                [95.30725846511538, 27.38203372004449],
-                [95.30691602201195, 27.38181345051111]
-            ],
-            "STF-FTNGB 2-2.8Km": [
-                [95.30691832487226, 27.38181704734882],
-                [95.30330923822123, 27.37966642742433],
-                [95.30213830210997, 27.37894225138339],
-                [95.30001057125446, 27.37518601591901],
-                [95.29882825503017, 27.37385371365139],
-                [95.29744999639016, 27.35976780919378]
-            ],
-            "STF-FTNGB 3-1.2Km": [
-                [95.29941082355144, 27.35932208262455],
-                [95.30042119816477, 27.36032296856115],
-                [95.30143121333748, 27.36002822139476],
-                [95.30194371323763, 27.35932208738778],
-                [95.30466296920847, 27.3522891974953]
-            ],
-            "STF-FTNGB 4-2.6Km": [
-                [95.31443465630451, 27.34659088098996],
-                [95.31226029955705, 27.33297665347676],
-                [95.3118081526105, 27.33155623007113],
-                [95.3118035032884, 27.33136691399159],
-                [95.31187910792912, 27.3299893932307],
-                [95.31235405753316, 27.32421568452671],
-                [95.31217845277922, 27.32407124522013],
-                [95.31220806887771, 27.32397028520028]
-            ],
-            "STF-FTNGB 5-2.8Km": [
-                [95.31183286277917, 27.33155543888421],
-                [95.31646946714905, 27.33091942878007],
-                [95.31646584893556, 27.33080842943741],
-                [95.31877711977684, 27.33055594023316],
-                [95.31909573009032, 27.32944458123028],
-                [95.32185945643506, 27.32977479611539],
-                [95.32210445977955, 27.3295395890315],
-                [95.32260894981107, 27.32968389361822],
-                [95.3248914552337, 27.33057571145363],
-                [95.32603973129989, 27.33116615248403],
-                [95.32821756932549, 27.33141945365726],
-                [95.32874288201003, 27.33160109737845],
-                [95.32966405408426, 27.33248929159975],
-                [95.33107841327323, 27.33361860998629],
-                [95.3337050440645, 27.33122210843889],
-                [95.33457862221783, 27.32921228574146]
-            ]
-        };
- 
-        // Function to get a random coordinate from the selected pipeline
-        function getRandomCoordinate(pipeline) {
-            var coords = pipelines[pipeline];
-            var index = Math.floor(Math.random() * coords.length);
-            return coords[index];
+        // Function to populate the dropdown with pipeline names
+        function populateDropdown() {
+            var dropdown = document.getElementById('pipelineNamesDropdown');
+            pipelines.forEach(function(name) {
+                var div = document.createElement('div');
+                div.textContent = name;
+                div.onclick = function() {
+                    document.getElementById('pipelineName').value = name;
+                    dropdown.style.display = 'none';
+                };
+                dropdown.appendChild(div);
+            });
         }
  
-        // Get the pipeline name from the URL
-        var selectedPipeline = urlParams.get('pipelineName');
+        // Call the function to populate dropdown on page load
+        populateDropdown();
  
-        // Get a random coordinate from the selected pipeline
-        if (selectedPipeline in pipelines) {
-            var [exampleLon, exampleLat] = getRandomCoordinate(selectedPipeline);
+        function submitForm() {
+            var name = encodeURIComponent(document.getElementById('name').value);
+            var pipelineName = encodeURIComponent(document.getElementById('pipelineName').value);
+            var date = encodeURIComponent(document.getElementById('date').value);
+            var empId = encodeURIComponent(document.getElementById('empId').value);
  
-            // Popup content
-            var popupContent = `
-                <div class="popup-content">
-                    <b>Name:</b> ${name}<br>
-                    <b>Pipeline Name:</b> ${selectedPipeline}<br>
-                    <b>Date:</b> ${date}<br>
-                    <b>Employee ID:</b> ${empId}<br>
-                    <b>Additional Info:</b> ${additionalInfo}
-                </div>
-            `;
- 
-            // Add marker to the map
-            var marker = L.marker([exampleLat, exampleLon])
-                .addTo(map)
-                .bindPopup(popupContent)
-                .openPopup();
- 
-            // Center the map on the marker
-            map.setView([exampleLat, exampleLon], 12);
-        } else {
-            alert('Invalid pipeline name provided.');
+            var url = `map.html?name=${name}&pipelineName=${pipelineName}&date=${date}&empId=${empId}`;
+            window.location.href = url;
         }
     </script>
 </body>
 </html>
- 
- 
